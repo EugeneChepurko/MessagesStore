@@ -12,7 +12,7 @@ namespace MessagesStore.Models
     {
         public AppContext(DbContextOptions<AppContext> options) : base(options)
         {
-           // Database.EnsureCreated();
+           // Database.EnsureCreated(); 
         }
         public DbSet<MessagesStore.ViewModels.RegistrationViewModel> RegistrationViewModel { get; set; }
         public DbSet<MessagesStore.ViewModels.LoginViewModel> LoginViewModel { get; set; }
