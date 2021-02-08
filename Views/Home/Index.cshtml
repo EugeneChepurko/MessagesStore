@@ -1,0 +1,146 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model IEnumerable<MessagesStore.Models.User>
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link type="text/css" rel="stylesheet" asp-append-version="true" href="~/css/site.css" />
+</head>
+
+<h3>Hello @User.Identity.Name !</h3>
+
+<div>
+    @*<form asp-action="Index" asp-controller="Home" method="post">
+        <input type="hidden" name="@User.Identity.Name" />
+        @Html.Label("enter a message (!Authorized person only!)") <br />
+        <input type="text" name="LastMessage" />
+        <p><input type="submit" value="Send message" /></p>
+    </form>*@
+
+    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+    {
+        <input type="hidden" name="@User.Identity.Name" />
+
+        @Html.Label("enter a message (!Authorized person only!)") <br />
+        <input type="text" name="LastMessage" />
+        <p><input type="submit" value="Send message" /></p>
+    }
+</div>
+
+<div class="row">
+    <h3>List of Users</h3>
+    <table class="table">
+        <tr>
+            <th><p>Id</p></th>
+            <th><p>Name</p></th>
+            <th><p>Birthday</p></th>
+            <th><p>Last Message</p></th>
+            <th></th>
+            <th></th>
+        </tr>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td id="getDataByLogin"><p>@user.Id</p></td>
+                <td><p>@user.UserName</p></td>
+                <td><p>@user.Year</p></td>
+                <td><p>@user.LastMessage</p></td>
+                <td><a class="btn btn-sm btn-primary" asp-controller="Users" asp-action="Edit" asp-route-id="@user.Id">Edit</a></td>
+                <td><a id="getDataByLogin" class="btn btn-sm btn-danger" asp-controller="Users" asp-action="Delete" asp-route-id="@user.Id">Delete</a></td>
+            </tr>
+        }
+    </table>
+</div>
+
+<script>
+        var tokenKey = "accessToken";
+
+        // отпавка запроса к контроллеру AccountController для получения токена
+        async function getTokenAsync() {
+
+            // получаем данные формы и фомируем объект для отправки
+            const formData = new FormData();
+            formData.append("grant_type", "password");
+            formData.append("username", document.getElementById("emailLogin").value);
+            formData.append("password", document.getElementById("passwordLogin").value);
+
+            // отправляет запрос и получаем ответ
+            const response = await fetch("/token", {
+                method: "POST",
+                headers: { "Accept": "application/json" },
+                body: formData
+            });
+            // получаем данные
+            const data = await response.json();
+
+            // если запрос прошел нормально
+            if (response.ok === true) {
+
+                // изменяем содержимое и видимость блоков на странице
+                document.getElementById("userName").innerText = data.username;
+                document.getElementById("userInfo").style.display = "block";
+                document.getElementById("loginForm").style.display = "none";
+                // сохраняем в хранилище sessionStorage токен доступа
+                sessionStorage.setItem(tokenKey, data.access_token);
+                console.log(data.access_token);
+            }
+            else {
+                // если произошла ошибка, из errorText получаем текст ошибки
+                console.log("Error: ", response.status, data.errorText);
+            }
+        };
+        // отправка запроса к контроллеру ValuesController
+        async function getData(url) {
+            const token = sessionStorage.getItem(tokenKey);
+
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "Authorization": "Bearer " + token  // передача токена в заголовке
+                }
+            });
+            if (response.ok === true) {
+
+                const data = await response.json();
+                alert(data)
+            }
+            else
+                console.log("Status: ", response.status);
+        };
+
+        // получаем токен
+        document.getElementById("submitLogin").addEventListener("click", e => {
+
+            e.preventDefault();
+            getTokenAsync();
+        });
+
+        // условный выход - просто удаляем токен и меняем видимость блоков
+        document.getElementById("logOut").addEventListener("click", e => {
+
+            e.preventDefault();
+            document.getElementById("userName").innerText = "";
+            document.getElementById("userInfo").style.display = "none";
+            document.getElementById("loginForm").style.display = "block";
+            sessionStorage.removeItem(tokenKey);
+        });
+
+
+        // кнопка получения имя пользователя  - /api/values/getlogin
+        document.getElementById("getDataByLogin").addEventListener("click", e => {
+
+            e.preventDefault();
+            getData("/api/values/getlogin");
+        });
+
+        // кнопка получения роли  - /api/values/getrole
+        document.getElementById("getDataByRole").addEventListener("click", e => {
+
+            e.preventDefault();
+            getData("/api/values/getrole");
+        });
+</script>
