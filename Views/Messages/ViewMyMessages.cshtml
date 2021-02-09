@@ -1,0 +1,42 @@
+﻿@model ICollection<Message>
+
+@{
+    ViewBag.Title = "All messages";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link type="text/css" rel="stylesheet" asp-append-version="true" href="~/css/site.css" />
+    <title>Info</title>
+</head>
+<body>
+    <div class="row">
+        <h3>List of users's messages</h3>
+        <table class="table">
+            <tr>
+                <th><p>@Html.ActionLink("Id", "ViewMyMessages", new { sortOrder = ViewBag.IdSortParam })</p></th>
+                <th><p>UserId</p></th>
+                <th><p>UserName</p></th>
+                <th><p>Message</p></th>
+                <th><p>@Html.ActionLink("Time", "ViewMyMessages", new { sortOrder = ViewBag.DateSortParam })</p></th>
+                <th><p>Delete message</p></th>
+            </tr>
+
+            @foreach (var v in Model)
+            {
+                <tr>
+                    <td><p>@v.Id</p></td>
+                    <td><p>@v.UserId</p></td>
+                    <td><p>@v.UserName</p></td>
+                    <td><p>@v.MessageBody</p></td>
+                    <td><p>@v.CurrentDate</p></td>
+                    <td><a class="btn btn-sm btn-danger" asp-controller="Messages" asp-action="DeleteMessage" asp-route-id="@v.Id">Delete</a></td>
+                    @*<td><p><a href="/Home/DeleteMessage/@v.Id">Delete message</a></p></td>*@
+                </tr>
+            }
+        </table>
+    </div>
+</body>
+</html>

@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,15 +12,16 @@ namespace MessagesStore.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly Models.AppContext _db;
         private readonly ILogger<HomeController> _logger;
         private readonly UserManager<User> _userManager;
 
-        public HomeController(UserManager<User> userManager, ILogger<HomeController> logger)
+        public HomeController(Models.AppContext db, UserManager<User> userManager, ILogger<HomeController> logger)
         {
+            _db = db;
             _userManager = userManager;
             _logger = logger;
         }
-
 
         [HttpGet]
         public IActionResult Index()
@@ -35,19 +34,22 @@ namespace MessagesStore.Controllers
         [HttpPost]
         public async Task<IActionResult> Index(User user)
         {
-            Message message = new Message();
-
             User _user = await _userManager.FindByNameAsync(User.Identity.Name);
 
             if (_user != null && _user.Email == User.Identity.Name)
             {
                 _user.LastMessage = user.LastMessage;
 
-                message.DateTime = DateTime.Now;
-                message.ApplicationUserId = _user.Id;
-                message.UserName = _user.Email;
-                message.MessageBody = _user.LastMessage;
-                message.User = _user;
+                Message message = new Message();
+                message.Initialize(_user.Id, _user.LastMessage, User.Identity.Name);
+
+                Message foundedMessage = _db.Messages.FirstOrDefault(u => u.UserId == _user.Id);
+
+                if (ModelState.IsValid)
+                {
+                    _db.Messages.Add(message);
+                    await _db.SaveChangesAsync();
+                }
 
                 await _userManager.UpdateAsync(_user);
             }
